@@ -15,6 +15,8 @@
 #include <vector>
 
 // 为了保持兼容性，我们使用标准库的vector
+#include "listnode.h"
+
 namespace MySTL {
     template<typename T>
     using vector = std::vector<T>;
@@ -60,38 +62,6 @@ public:
     }
 };
 
-// ListNode类声明
-template <typename T>
-class ListNode {
-public:
-    T data;
-    ListNode<T>* pred;
-    ListNode<T>* succ;
-    
-    ListNode() {}
-    ListNode(T e, ListNode<T>* p = nullptr, ListNode<T>* s = nullptr);
-    
-    ListNode<T>* insertAsPred(T const& e);
-    ListNode<T>* insertAsSucc(T const& e);
-};
-
-// List类声明
-template <typename T>
-class List {
-private:
-    int _size;
-    ListNode<T>* header;
-    ListNode<T>* trailer;
-    
-protected:
-    void init();
-    int clear();
-    void copyNodes(ListNode<T>* p, int n);
-    void merge(ListNode<T>*& p, int n, List<T>& L, ListNode<T>* q, int m);
-    void mergeSort(ListNode<T>*& p, int n);
-    void selectionSort(ListNode<T>* p, int n);
-    void insertionSort(ListNode<T>* p, int n);
-    
 public:
     List() { init(); }
     List(List<T> const& L);

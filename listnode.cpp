@@ -32,6 +32,10 @@
 // 前向声明
 template <typename T> class List;
 
+#include "listnode.h"
+
+namespace MySTL {
+
 /**
  * @brief 列表节点模板类（以双向链表形式实现）
  * @tparam T 数据类型
