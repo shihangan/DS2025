@@ -1,0 +1,10 @@
+^E:\SOURCE\DS2025\DS2025\BUILD\CMAKEFILES\1DFA77BBBA9ECC00096322A4D6051649\GENERATE.STAMP.RULE
+setlocal
+E:\CMake\bin\cmake.exe -SE:/source/DS2025/DS2025 -BE:/source/DS2025/DS2025/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file E:/source/DS2025/DS2025/build/Project.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

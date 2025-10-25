@@ -5,15 +5,8 @@
 
 namespace MySTL {
 
-template <typename T, typename Container = MySTL::Vector<T>>
+template <typename T, typename Container = Vector<T>>
 class Stack {
-public:
-    // 类型定义
-    typedef typename Container::value_type value_type;
-    typedef typename Container::size_type size_type;
-    typedef typename Container::reference reference;
-    typedef typename Container::const_reference const_reference;
-
 protected:
     Container c;
 
@@ -25,21 +18,31 @@ public:
     bool empty() const { return c.empty(); }
 
     // 返回栈中元素的数量
-    size_type size() const { return c.size(); }
+    int size() const { return c.size(); }
 
     // 返回栈顶元素的引用
-    reference top() { return c.back(); }
-    const_reference top() const { return c.back(); }
+    T& top() { return c[c.size() - 1]; }
+    const T& top() const { return c[c.size() - 1]; }
 
     // 将元素压入栈顶
-    void push(const value_type& value) { c.push_back(value); }
-    void push(value_type&& value) { c.push_back(std::move(value)); }
+    void push(const T& value) { c.insert(c.size(), value); }
 
-    // 移除栈顶元素
-    void pop() { c.pop_back(); }
+    // 移除栈顶元素并返回被移除的元素
+    T pop() { T e = c[c.size() - 1]; c.remove(c.size() - 1); return e; }
 
     // 清空栈
-    void clear() { c.clear(); }
+    void clear() { if (!c.empty()) c.remove(0, c.size()); }
+
+    // 遍历（从栈底到栈顶）
+    template <typename VST>
+    void traverse(VST& visit) {
+        for (int i = 0; i < c.size(); ++i) visit(c[i]);
+    }
+
+    template <typename VST>
+    void traverse(VST& visit) const {
+        for (int i = 0; i < c.size(); ++i) visit(c[i]);
+    }
 };
 
 } // namespace MySTL

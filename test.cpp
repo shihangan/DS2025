@@ -9,9 +9,10 @@
 
 #include <iostream>
 #include <string>
-#include "mystl.h"
+#include "stack.h"
 
 using namespace std;
+using namespace MySTL;
 
 // 测试函数声明
 void testStack();

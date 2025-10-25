@@ -1,379 +1,223 @@
 #include <iostream>
 #include <string>
-#include <cmath>
-#include <stdexcept>
 #include <cctype>
+#include <cmath>
 #include <map>
-#include <algorithm>
-#include "../vector.h"
+#include <functional>
 #include "../stack.h"
+#include "../vector.h"
 
+using namespace MySTL;
 
-
-// 函数类型定义
-enum class FunctionType {
-    NONE,
-    UNARY,  // 一元函数，如sin, cos, log
-    BINARY  // 二元函数，如pow, max, min
-};
-
-// 函数信息结构体
-struct FunctionInfo {
-    FunctionType type;
-    std::function<double(double)> unaryFunc;
-    std::function<double(double, double)> binaryFunc;
-};
-
-// 运算符优先级定义
-int operatorPriority(char op) {
-    switch (op) {
-        case '+': 
-        case '-': 
-            return 1;
-        case '*': 
-        case '/': 
-            return 2;
-        case '^': 
-            return 3;
-        case '(': 
-            return 0;  // 左括号优先级最低
-        default: 
-            return -1; // 非法运算符
-    }
-}
-
-// 执行二元运算
-double performOperation(double a, double b, char op) {
-    switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': 
-            if (b == 0) {
-                throw std::runtime_error("除数不能为零");
-            }
-            return a / b;
-        case '^': return std::pow(a, b);
-        default: 
-            throw std::runtime_error("不支持的运算符");
-    }
-}
-
-// 字符串计算器类
 class StringCalculator {
 private:
-    MySTL::Stack<double> numStack;    // 数值栈
-    MySTL::Stack<char> opStack;       // 运算符栈
-    
-    // 函数映射表
-    std::map<std::string, FunctionInfo> functions;
+    Stack<double> values;   // 数值栈
+    Stack<char> ops;        // 操作符栈
 
-    // 初始化函数映射表
-    void initFunctions() {
-        // 一元函数
-        functions["sin"] = {FunctionType::UNARY, [](double x) { return std::sin(x); }, nullptr};
-        functions["cos"] = {FunctionType::UNARY, [](double x) { return std::cos(x); }, nullptr};
-        functions["tan"] = {FunctionType::UNARY, [](double x) { return std::tan(x); }, nullptr};
-        functions["asin"] = {FunctionType::UNARY, [](double x) { return std::asin(x); }, nullptr};
-        functions["acos"] = {FunctionType::UNARY, [](double x) { return std::acos(x); }, nullptr};
-        functions["atan"] = {FunctionType::UNARY, [](double x) { return std::atan(x); }, nullptr};
-        functions["sqrt"] = {FunctionType::UNARY, [](double x) { 
-            if (x < 0) throw std::runtime_error("负数不能开平方根");
-            return std::sqrt(x); 
-        }, nullptr};
-        functions["log"] = {FunctionType::UNARY, [](double x) { 
-            if (x <= 0) throw std::runtime_error("对数函数的参数必须为正数");
-            return std::log(x); 
-        }, nullptr};
-        functions["log10"] = {FunctionType::UNARY, [](double x) { 
-            if (x <= 0) throw std::runtime_error("对数函数的参数必须为正数");
-            return std::log10(x); 
-        }, nullptr};
-        functions["exp"] = {FunctionType::UNARY, [](double x) { return std::exp(x); }, nullptr};
-        functions["abs"] = {FunctionType::UNARY, [](double x) { return std::abs(x); }, nullptr};
-        functions["ceil"] = {FunctionType::UNARY, [](double x) { return std::ceil(x); }, nullptr};
-        functions["floor"] = {FunctionType::UNARY, [](double x) { return std::floor(x); }, nullptr};
-        functions["round"] = {FunctionType::UNARY, [](double x) { return std::round(x); }, nullptr};
-        
-        // 二元函数
-        functions["max"] = {FunctionType::BINARY, nullptr, [](double a, double b) { return std::max(a, b); }};
-        functions["min"] = {FunctionType::BINARY, nullptr, [](double a, double b) { return std::min(a, b); }};
-        functions["pow"] = {FunctionType::BINARY, nullptr, [](double a, double b) { return std::pow(a, b); }};
+    // 运算符优先级
+    int precedence(char op) {
+        if (op == '+' || op == '-') return 1;
+        if (op == '*' || op == '/' || op == '%') return 2;
+        if (op == '^') return 3;
+        return 0;
     }
 
-    // 处理数字
-    void processNumber(const std::string& expr, size_t& i) {
-        double num = 0;
+    // 计算两个数的运算结果
+    double applyOp(double a, double b, char op) {
+        switch(op) {
+            case '+': return a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/':
+                if (b == 0) throw std::runtime_error("Division by zero");
+                return a / b;
+            case '%':
+                if (b == 0) throw std::runtime_error("Modulo by zero");
+                return std::fmod(a, b);
+            case '^': return std::pow(a, b);
+        }
+        return 0;
+    }
+
+    // 解析数字，包括整数和浮点数
+    double parseNumber(const std::string& s, size_t& i) {
+        size_t start = i;
         bool hasDecimal = false;
-        double decimalPlace = 0.1;
-
-        // 处理整数部分
-        while (i < expr.length() && (std::isdigit(expr[i]) || expr[i] == '.')) {
-            if (expr[i] == '.') {
+        while (i < s.length() && (std::isdigit(s[i]) || s[i] == '.')) {
+            if (s[i] == '.') {
+                if (hasDecimal) throw std::runtime_error("Invalid number format");
                 hasDecimal = true;
-                i++;
-                continue;
-            }
-
-            if (!hasDecimal) {
-                num = num * 10 + (expr[i] - '0');
-            } else {
-                num = num + (expr[i] - '0') * decimalPlace;
-                decimalPlace *= 0.1;
             }
             i++;
         }
-        i--; // 回退一个位置，因为外层循环会自增
-        numStack.push(num);
+        double val = std::stod(s.substr(start, i - start));
+        return val;
     }
 
-    // 处理运算符
-    void processOperator(char op) {
-        if (opStack.empty() || op == '(' || operatorPriority(op) > operatorPriority(opStack.top())) {
-            opStack.push(op);
-        } else {
-            while (!opStack.empty() && opStack.top() != '(' && 
-                   operatorPriority(op) <= operatorPriority(opStack.top())) {
-                calculateTop();
-            }
-            opStack.push(op);
-        }
-    }
-
-    // 处理右括号
-    void processRightParenthesis() {
-        while (!opStack.empty() && opStack.top() != '(') {
-            calculateTop();
-        }
-        
-        if (!opStack.empty() && opStack.top() == '(') {
-            opStack.pop(); // 弹出左括号
-        } else {
-            throw std::runtime_error("括号不匹配");
-        }
-    }
-
-    // 计算栈顶的一次运算
-    void calculateTop() {
-        if (numStack.size() < 2 || opStack.empty()) {
-            throw std::runtime_error("表达式无效");
-        }
-        
-        double b = numStack.pop();
-        double a = numStack.pop();
-        char op = opStack.pop();
-        
-        double result = performOperation(a, b, op);
-        numStack.push(result);
-    }
-    
-    // 处理函数
-    bool processFunction(const std::string& expr, size_t& i) {
-        // 保存当前位置，用于回溯
+    // 解析函数，如 sin(x), cos(x), tan(x), log(x), sqrt(x)
+    double parseFunction(const std::string& s, size_t& i) {
         size_t start = i;
-        
-        // 读取可能的函数名
-        std::string funcName;
-        while (i < expr.length() && std::isalpha(expr[i])) {
-            funcName += expr[i++];
+        while (i < s.length() && std::isalpha(s[i])) i++;
+        std::string func = s.substr(start, i - start);
+
+        // 支持常量 e 和 pi
+        if (func == "e") return std::exp(1.0);
+        if (func == "pi") return 3.14159265358979323846;
+
+        // 假设函数格式为 func(expr)
+        if (i >= s.length() || s[i] != '(') throw std::runtime_error("Expected '(' after function name");
+        i++; // 跳过 '('
+
+        // 解析表达式直到配对的 ')'
+        int parenCount = 1;
+        std::string expr;
+        while (i < s.length() && parenCount > 0) {
+            if (s[i] == '(') parenCount++;
+            else if (s[i] == ')') parenCount--;
+            if (parenCount > 0) expr.push_back(s[i]);
+            i++;
         }
-        
-        // 检查是否是已知函数
-        if (functions.find(funcName) != functions.end()) {
-            // 跳过空白字符
-            while (i < expr.length() && std::isspace(expr[i])) {
-                i++;
-            }
-            
-            // 检查是否有左括号
-            if (i < expr.length() && expr[i] == '(') {
-                i++; // 跳过左括号
-                
-                // 处理函数参数
-                if (functions[funcName].type == FunctionType::UNARY) {
-                    // 递归计算参数表达式
-                    double arg = calculateSubExpression(expr, i);
-                    
-                    // 应用一元函数
-                    double result = functions[funcName].unaryFunc(arg);
-                    numStack.push(result);
-                    
-                    return true;
-                } else if (functions[funcName].type == FunctionType::BINARY) {
-                    // 递归计算第一个参数
-                    double arg1 = calculateSubExpression(expr, i);
-                    
-                    // 检查是否有逗号
-                    if (i < expr.length() && expr[i] == ',') {
-                        i++; // 跳过逗号
-                        
-                        // 递归计算第二个参数
-                        double arg2 = calculateSubExpression(expr, i);
-                        
-                        // 应用二元函数
-                        double result = functions[funcName].binaryFunc(arg1, arg2);
-                        numStack.push(result);
-                        
-                        return true;
-                    } else {
-                        throw std::runtime_error("二元函数需要两个参数");
-                    }
-                }
-            }
+        if (parenCount != 0) throw std::runtime_error("Mismatched parentheses in function call");
+
+        double arg = evaluate(expr);
+
+        if (func == "sin") return std::sin(arg);
+        if (func == "cos") return std::cos(arg);
+        if (func == "tan") return std::tan(arg);
+        if (func == "log") {
+            if (arg <= 0) throw std::runtime_error("Logarithm of non-positive number");
+            return std::log(arg);
         }
-        
-        // 不是函数，回溯
-        i = start;
-        return false;
+        if (func == "sqrt") {
+            if (arg < 0) throw std::runtime_error("Square root of negative number");
+            return std::sqrt(arg);
+        }
+
+        throw std::runtime_error("Unknown function: " + func);
     }
-    
-    // 计算子表达式
-    double calculateSubExpression(const std::string& expr, size_t& i) {
-        // 创建临时计算器来计算子表达式
-        StringCalculator subCalculator;
-        subCalculator.functions = this->functions; // 复制函数表
-        
-        // 保存子表达式
-        std::string subExpr;
-        int parenCount = 1; // 已经遇到一个左括号
-        
-        while (i < expr.length() && parenCount > 0) {
-            if (expr[i] == '(') {
-                parenCount++;
-            } else if (expr[i] == ')') {
-                parenCount--;
-                if (parenCount == 0) {
-                    i++; // 跳过右括号
-                    break;
-                }
-            } else if (expr[i] == ',' && parenCount == 1) {
-                // 遇到同级别的逗号，结束当前参数
-                i++; // 跳过逗号
-                break;
-            }
-            
-            if (parenCount > 0) {
-                subExpr += expr[i++];
-            }
-        }
-        
-        // 计算子表达式
-        return subCalculator.calculate(subExpr);
+
+    // 处理一元运算符，如负号
+    bool isUnaryMinus(const std::string& s, size_t pos) {
+        if (s[pos] != '-') return false;
+        if (pos == 0) return true;
+        char prev = s[pos - 1];
+        return prev == '(' || prev == '+' || prev == '-' || prev == '*' || prev == '/' || prev == '^';
     }
 
 public:
-    // 构造函数
-    StringCalculator() {
-        initFunctions();
-    }
-    
-    // 计算表达式
-    double calculate(const std::string& expr) {
-        numStack.clear();
-        opStack.clear();
-        
-        for (size_t i = 0; i < expr.length(); i++) {
-            char c = expr[i];
-            
-            if (std::isspace(c)) {
-                continue; // 跳过空白字符
-            } else if (std::isdigit(c) || c == '.') {
-                processNumber(expr, i);
-            } else if (std::isalpha(c)) {
-                // 尝试处理函数
-                if (!processFunction(expr, i)) {
-                    // 如果不是函数，可能是常量
-                    if (c == 'e' || (c == 'p' && i + 1 < expr.length() && expr[i + 1] == 'i')) {
-                        if (c == 'e') {
-                            numStack.push(M_E); // 自然对数的底
-                        } else {
-                            numStack.push(M_PI); // 圆周率
-                            i++; // 跳过'i'
-                        }
-                    } else {
-                        throw std::runtime_error("未知的标识符: " + std::string(1, c));
-                    }
+    // 评估表达式
+    double evaluate(const std::string& s) {
+        size_t i = 0;
+
+        while (i < s.length()) {
+            if (std::isspace(s[i])) { i++; continue; }
+
+            if (s[i] == '(') {
+                ops.push('(');
+                i++;
+            } else if (s[i] == ')') {
+                while (!ops.empty() && ops.top() != '(') {
+                    double b = values.top(); values.pop();
+                    double a = values.top(); values.pop();
+                    char op = ops.top(); ops.pop();
+                    values.push(applyOp(a, b, op));
                 }
-                i--; // 回退一个位置，因为外层循环会自增
-            } else if (c == '(') {
-                opStack.push(c);
-            } else if (c == ')') {
-                processRightParenthesis();
-            } else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
-                processOperator(c);
+                if (!ops.empty()) ops.pop();
+                i++;
+            } else if (std::isdigit(s[i]) || s[i] == '.') {
+                values.push(parseNumber(s, i));
+            } else if (std::isalpha(s[i])) {
+                double val = parseFunction(s, i);
+                values.push(val);
+            } else if (s[i] == '-') {
+                if (isUnaryMinus(s, i)) {
+                    i++;
+                    double val = parseNumber(s, i);
+                    values.push(-val);
+                } else {
+                    while (!ops.empty() && precedence(ops.top()) >= precedence('-')) {
+                        double b = values.top(); values.pop();
+                        double a = values.top(); values.pop();
+                        char op = ops.top(); ops.pop();
+                        values.push(applyOp(a, b, op));
+                    }
+                    ops.push('-');
+                    i++;
+                }
+            } else if (s[i] == '+' || s[i] == '*' || s[i] == '/' || s[i] == '^' || s[i] == '%') {
+                char currentOp = s[i];
+                while (!ops.empty() && precedence(ops.top()) >= precedence(currentOp)) {
+                    double b = values.top(); values.pop();
+                    double a = values.top(); values.pop();
+                    char op = ops.top(); ops.pop();
+                    values.push(applyOp(a, b, op));
+                }
+                ops.push(currentOp);
+                i++;
             } else {
-                throw std::runtime_error("表达式包含无效字符");
+                throw std::runtime_error(std::string("Unexpected character: ") + s[i]);
             }
         }
-        
-        // 处理剩余的运算符
-        while (!opStack.empty()) {
-            if (opStack.top() == '(') {
-                throw std::runtime_error("括号不匹配");
-            }
-            calculateTop();
+
+        while (!ops.empty()) {
+            double b = values.top(); values.pop();
+            double a = values.top(); values.pop();
+            char op = ops.top(); ops.pop();
+            values.push(applyOp(a, b, op));
         }
-        
-        if (numStack.size() != 1) {
-            throw std::runtime_error("表达式无效");
-        }
-        
-        return numStack.top();
+
+        if (values.empty()) throw std::runtime_error("Invalid expression");
+        return values.top();
     }
 };
 
-// 主函数
 int main() {
-    StringCalculator calculator;
-    std::string expression;
-    
-    std::cout << "增强型字符串计算器 (输入'exit'退出)" << std::endl;
-    std::cout << "支持的基本运算: +, -, *, /, ^(幂运算), 括号" << std::endl;
-    std::cout << "支持的函数: sin, cos, tan, asin, acos, atan, sqrt, log, log10, exp, abs, ceil, floor, round" << std::endl;
-    std::cout << "支持的二元函数: max, min, pow" << std::endl;
-    std::cout << "支持的常量: e, pi" << std::endl;
-    
-    // 测试案例
-    MySTL::Vector<std::string> testCases = {
-        "1 + 2 * 3",
-        "(1 + 2) * 3",
-        "2 ^ 3 + 4",
-        "sin(pi/2)",
+    StringCalculator calc;
+
+    // 测试用例
+    MySTL::Vector<std::string> testCases;
+    const char* arr[] = {
+        "3 + 5",
+        "10 + 2 * 6",
+        "100 * 2 + 12",
+        "100 * ( 2 + 12 )",
+        "100 * ( 2 + 12 ) / 14",
+        "sin(pi / 2)",
         "cos(0)",
-        "log(100)",
+        "tan(pi / 4)",
+        "log(e)",
         "sqrt(16)",
-        "max(5, 10)",
-        "min(5, 10)",
-        "abs(-5)",
-        "2 * sin(pi/4) ^ 2"
+        "-5 + 3",
+        "-(3 + 2) * 4",
+        "3 + 4 * 2 / (1 - 5)^2",
+        "10 % 3"
     };
-    
-    std::cout << "\n测试案例:" << std::endl;
-    for (const auto& test : testCases) {
+    for (int i=0;i<14;++i) testCases.insert(testCases.size(), std::string(arr[i]));
+
+    for (int i=0;i<testCases.size();++i) {
+        const std::string& expr = testCases[i];
         try {
-            double result = calculator.calculate(test);
-            std::cout << test << " = " << result << std::endl;
+            double result = calc.evaluate(expr);
+            std::cout << expr << " = " << result << std::endl;
         } catch (const std::exception& e) {
-            std::cout << test << " 错误: " << e.what() << std::endl;
+            std::cout << "Error evaluating '" << expr << "': " << e.what() << std::endl;
         }
     }
-    
-    std::cout << "\n开始交互式计算:" << std::endl;
+
+    // 交互模式
+    std::cout << "\n请输入表达式（或输入 'exit' 退出）：" << std::endl;
+    std::string input;
     while (true) {
-        std::cout << "\n请输入表达式: ";
-        std::getline(std::cin, expression);
-        
-        if (expression == "exit") {
-            break;
-        }
-        
+        std::cout << "> ";
+        if (!std::getline(std::cin, input)) break;
+        if (input == "exit") break;
         try {
-            double result = calculator.calculate(expression);
-            std::cout << "计算结果: " << result << std::endl;
+            double result = calc.evaluate(input);
+            std::cout << "结果: " << result << std::endl;
         } catch (const std::exception& e) {
             std::cout << "错误: " << e.what() << std::endl;
         }
     }
-    
+
     return 0;
 }

@@ -5,12 +5,14 @@
 #include "../vector.h"
 #include "../stack.h"
 
+using namespace MySTL;
+
 // 计算柱状图中能够勾勒出的矩形的最大面积
-int largestRectangleArea(const MySTL::Vector<int>& heights) {
+int largestRectangleArea(const Vector<int>& heights) {
     int n = heights.size();
     if (n == 0) return 0;
     
-    MySTL::Stack<int> st; // 用于存储柱子的索引
+    Stack<int> st; // 用于存储柱子的索引
     int maxArea = 0;
     
     for (int i = 0; i <= n; i++) {
@@ -35,8 +37,8 @@ int largestRectangleArea(const MySTL::Vector<int>& heights) {
 }
 
 // 生成随机测试数据
-MySTL::Vector<MySTL::Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
-    MySTL::Vector<MySTL::Vector<int>> testData;
+Vector<Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
+    Vector<Vector<int>> testData;
     std::random_device rd;
     std::mt19937 gen(rd());
     
@@ -45,23 +47,31 @@ MySTL::Vector<MySTL::Vector<int>> generateTestData(int numTests, int maxSize, in
         std::uniform_int_distribution<> sizeDist(1, maxSize);
         int size = sizeDist(gen);
         
-        std::vector<int> heights;
+        Vector<int> heights;
         // 随机生成高度 (0 <= height <= maxHeight)
         std::uniform_int_distribution<> heightDist(0, maxHeight);
         
         for (int i = 0; i < size; i++) {
-            heights.push_back(heightDist(gen));
+            int v = heightDist(gen);
+            heights.insert(heights.size(), v);
         }
         
-        testData.push_back(heights);
+        testData.insert(testData.size(), heights);
     }
     
     return testData;
 }
 
 // 打印柱状图（可视化）
-void printHistogram(const std::vector<int>& heights) {
-    int maxHeight = *std::max_element(heights.begin(), heights.end());
+void printHistogram(const Vector<int>& heights) {
+    int maxHeight = 0;
+    if (heights.size() > 0) {
+        for (int i = 0; i < heights.size(); ++i) {
+            if (heights[i] > maxHeight) {
+                maxHeight = heights[i];
+            }
+        }
+    }
     
     // 打印柱状图
     for (int h = maxHeight; h > 0; h--) {
@@ -88,7 +98,7 @@ int main() {
     int maxSize = 20;  // 为了可视化效果，限制大小
     int maxHeight = 10; // 为了可视化效果，限制高度
     
-    std::vector<std::vector<int>> testData = generateTestData(numTests, maxSize, maxHeight);
+    Vector<Vector<int>> testData = generateTestData(numTests, maxSize, maxHeight);
     
     std::cout << "柱状图中矩形的最大面积测试：" << std::endl;
     std::cout << "==============================" << std::endl;
@@ -96,8 +106,8 @@ int main() {
     for (int i = 0; i < numTests; i++) {
         std::cout << "测试 #" << (i + 1) << ":" << std::endl;
         std::cout << "柱状图高度: ";
-        for (int h : testData[i]) {
-            std::cout << h << " ";
+        for (int j = 0; j < testData[i].size(); ++j) {
+            std::cout << testData[i][j] << " ";
         }
         std::cout << std::endl;
         
@@ -113,12 +123,26 @@ int main() {
     }
     
     // 额外测试一些特殊情况
-    std::vector<std::vector<int>> specialCases = {
-        {2, 1, 5, 6, 2, 3},  // 经典测试用例，最大面积为10
-        {2, 4},              // 简单情况
-        {0, 0, 0, 0},        // 全零情况
-        {}                   // 空数组
-    };
+    Vector<Vector<int>> specialCases;
+    {
+        Vector<int> v1; int a1[] = {2,1,5,6,2,3};
+        for (int k=0;k<6;++k) v1.insert(v1.size(), a1[k]);
+        specialCases.insert(specialCases.size(), v1);
+    }
+    {
+        Vector<int> v2; int a2[] = {2,4};
+        for (int k=0;k<2;++k) v2.insert(v2.size(), a2[k]);
+        specialCases.insert(specialCases.size(), v2);
+    }
+    {
+        Vector<int> v3; int a3[] = {0,0,0,0};
+        for (int k=0;k<4;++k) v3.insert(v3.size(), a3[k]);
+        specialCases.insert(specialCases.size(), v3);
+    }
+    {
+        Vector<int> v4; // 空数组
+        specialCases.insert(specialCases.size(), v4);
+    }
     
     std::cout << "特殊测试用例：" << std::endl;
     std::cout << "==============================" << std::endl;
@@ -126,8 +150,8 @@ int main() {
     for (int i = 0; i < specialCases.size(); i++) {
         std::cout << "特殊用例 #" << (i + 1) << ":" << std::endl;
         std::cout << "柱状图高度: ";
-        for (int h : specialCases[i]) {
-            std::cout << h << " ";
+        for (int j = 0; j < specialCases[i].size(); ++j) {
+            std::cout << specialCases[i][j] << " ";
         }
         std::cout << std::endl;
         

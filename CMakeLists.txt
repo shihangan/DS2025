@@ -1,4 +1,10 @@
 # DS2025 数据结构库
+cmake_minimum_required(VERSION 3.10)
+project(DS2025 VERSION 1.0.0 LANGUAGES CXX)
+
+# 设置C++标准
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 设置源文件
 set(MYSTL_SOURCES
@@ -9,7 +15,9 @@ set(MYSTL_SOURCES
 
 # 设置头文件（如果有的话）
 set(MYSTL_HEADERS
-    # 目前所有定义都在.cpp文件中
+    stack.h
+    listnode.h
+    vector.h
 )
 
 # 创建静态库

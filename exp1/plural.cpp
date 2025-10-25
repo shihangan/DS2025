@@ -7,6 +7,8 @@
 #include <string>
 #include "../vector.h"
 
+using namespace MySTL;
+
 // 复数类定义
 class plural {
 private:
@@ -50,6 +52,11 @@ public:
         return real == other.real && imag == other.imag;
     }
     
+    // 重载不等运算符
+    bool operator!=(const plural& other) const {
+        return !(*this == other);
+    }
+    
     // 输出运算符重载
     friend std::ostream& operator<<(std::ostream& os, const plural& p) {
         os << p.real;
@@ -66,17 +73,13 @@ struct PluralComparator {
     bool operator()(const plural& a, const plural& b) const {
         double mod_a = a.modulus();
         double mod_b = b.modulus();
-        
-        if (std::abs(mod_a - mod_b) < 1e-10) {
-            return a.getReal() < b.getReal();
-        }
         return mod_a < mod_b;
     }
 };
 
 // 生成随机复数向量
-MySTL::vector<plural> generateRandomPluralVector(int size, double min_val = -10.0, double max_val = 10.0) {
-    MySTL::vector<plural> vec;
+MySTL::Vector<plural> generateRandomPluralVector(int size, double min_val = -10.0, double max_val = 10.0) {
+    MySTL::Vector<plural> vec;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dist(min_val, max_val);
@@ -84,19 +87,19 @@ MySTL::vector<plural> generateRandomPluralVector(int size, double min_val = -10.
     for (int i = 0; i < size; ++i) {
         double real = dist(gen);
         double imag = dist(gen);
-        vec.push_back(plural(real, imag));
+        vec.insert(plural(real, imag)); // 使用MySTL::Vector的insert方法
     }
     
     return vec;
 }
 
 // 打印复数向量
-void printPluralVector(const MySTL::vector<plural>& vec, const std::string& label = "") {
+void printPluralVector(const MySTL::Vector<plural>& vec, const std::string& label = "") {
     if (!label.empty()) {
         std::cout << label << ": ";
     }
     std::cout << "[ ";
-    for (size_t i = 0; i < vec.size(); ++i) {
+    for (int i = 0; i < vec.size(); ++i) {
         std::cout << vec[i];
         if (i < vec.size() - 1) {
             std::cout << ", ";
@@ -106,50 +109,28 @@ void printPluralVector(const MySTL::vector<plural>& vec, const std::string& labe
 }
 
 // 置乱复数向量
-void shufflePluralVector(MySTL::vector<plural>& vec) {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    
-    for (size_t i = vec.size() - 1; i > 0; --i) {
-        std::uniform_int_distribution<size_t> dist(0, i);
-        size_t j = dist(g);
-        std::swap(vec[i], vec[j]);
-    }
+void shufflePluralVector(MySTL::Vector<plural>& vec) {
+    vec.unsort(); // 使用MySTL::Vector的unsort方法
 }
 
 // 查找复数（实部和虚部均相同）
-bool findPlural(const MySTL::vector<plural>& vec, const plural& p) {
-    return MySTL::linear_search(vec, p) != vec.end();
+bool findPlural(const MySTL::Vector<plural>& vec, const plural& p) {
+    return vec.find(p) != -1; // 使用MySTL::Vector的find方法
 }
 
 // 唯一化复数向量（去除重复项）
-void uniquifyPluralVector(MySTL::vector<plural>& vec) {
-    MySTL::vector<plural> result;
-    
-    for (size_t i = 0; i < vec.size(); ++i) {
-        bool isDuplicate = false;
-        for (size_t j = 0; j < result.size(); ++j) {
-            if (vec[i] == result[j]) {
-                isDuplicate = true;
-                break;
-            }
-        }
-        if (!isDuplicate) {
-            result.push_back(vec[i]);
-        }
-    }
-    
-    vec = std::move(result);
+void uniquifyPluralVector(MySTL::Vector<plural>& vec) {
+    vec.deduplicate(); // 使用MySTL::Vector的deduplicate方法
 }
 
 // 起泡排序
 template<typename T>
-void bubbleSort(MySTL::vector<T>& vec, const std::function<bool(const T&, const T&)>& comp) {
+void bubbleSort(MySTL::Vector<T>& vec, const std::function<bool(const T&, const T&)>& comp) {
     clock_t start = clock();
     
-    size_t n = vec.size();
-    for (size_t i = 0; i < n - 1; ++i) {
-        for (size_t j = 0; j < n - i - 1; ++j) {
+    int n = vec.size();
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = 0; j < n - i - 1; ++j) {
             if (comp(vec[j+1], vec[j])) {
                 std::swap(vec[j], vec[j+1]);
             }
@@ -162,22 +143,22 @@ void bubbleSort(MySTL::vector<T>& vec, const std::function<bool(const T&, const 
 
 // 归并排序辅助函数
 template<typename T>
-void merge(MySTL::vector<T>& vec, size_t left, size_t mid, size_t right, 
+void merge(MySTL::Vector<T>& vec, int left, int mid, int right, 
            const std::function<bool(const T&, const T&)>& comp) {
-    size_t n1 = mid - left + 1;
-    size_t n2 = right - mid;
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
     
     // 创建临时数组
-    MySTL::vector<T> L, R;
+    MySTL::Vector<T> L, R;
     
     // 复制数据到临时数组
-    for (size_t i = 0; i < n1; ++i)
-        L.push_back(vec[left + i]);
-    for (size_t j = 0; j < n2; ++j)
-        R.push_back(vec[mid + 1 + j]);
+    for (int i = 0; i < n1; ++i)
+        L.insert(vec[left + i]);
+    for (int j = 0; j < n2; ++j)
+        R.insert(vec[mid + 1 + j]);
     
     // 合并临时数组
-    size_t i = 0, j = 0, k = left;
+    int i = 0, j = 0, k = left;
     while (i < n1 && j < n2) {
         if (!comp(R[j], L[i])) {
             vec[k] = L[i];
@@ -204,10 +185,10 @@ void merge(MySTL::vector<T>& vec, size_t left, size_t mid, size_t right,
 
 // 归并排序实现
 template<typename T>
-void mergeSortImpl(MySTL::vector<T>& vec, size_t left, size_t right, 
+void mergeSortImpl(MySTL::Vector<T>& vec, int left, int right, 
                   const std::function<bool(const T&, const T&)>& comp) {
     if (left < right) {
-        size_t mid = left + (right - left) / 2;
+        int mid = left + (right - left) / 2;
         mergeSortImpl(vec, left, mid, comp);
         mergeSortImpl(vec, mid + 1, right, comp);
         merge(vec, left, mid, right, comp);
@@ -216,7 +197,7 @@ void mergeSortImpl(MySTL::vector<T>& vec, size_t left, size_t right,
 
 // 归并排序
 template<typename T>
-void mergeSort(MySTL::vector<T>& vec, const std::function<bool(const T&, const T&)>& comp) {
+void mergeSort(MySTL::Vector<T>& vec, const std::function<bool(const T&, const T&)>& comp) {
     clock_t start = clock();
     
     if (vec.size() > 1) {
@@ -228,15 +209,60 @@ void mergeSort(MySTL::vector<T>& vec, const std::function<bool(const T&, const T
 }
 
 // 区间查找算法，查找模在[m1,m2)范围内的元素
-MySTL::vector<plural> findInModulusRange(const MySTL::vector<plural>& vec, double m1, double m2) {
-    MySTL::vector<plural> result;
+MySTL::Vector<plural> findInModulusRange(const MySTL::Vector<plural>& vec, double m1, double m2) {
+    MySTL::Vector<plural> result;
     
-    for (size_t i = 0; i < vec.size(); ++i) {
+    for (int i = 0; i < vec.size(); ++i) {
         double mod = vec[i].modulus();
         if (mod >= m1 && mod < m2) {
-            result.push_back(vec[i]);
+            result.insert(vec[i]);
         }
     }
     
     return result;
+}
+
+// 主函数，测试复数向量的各种操作
+int main() {
+    std::cout << "复数向量操作测试：" << std::endl;
+    std::cout << "==============================" << std::endl;
+    
+    // 生成随机复数向量
+    MySTL::Vector<plural> vec = generateRandomPluralVector(10);
+    printPluralVector(vec, "原始向量");
+    
+    // 测试查找功能
+    plural target(3.0, 4.0);
+    std::cout << "\n查找复数 " << target << ": ";
+    if (findPlural(vec, target)) {
+        std::cout << "找到" << std::endl;
+    } else {
+        std::cout << "未找到" << std::endl;
+    }
+    
+    // 测试唯一化
+    vec.insert(vec[0]); // 插入重复元素
+    printPluralVector(vec, "插入重复元素后");
+    uniquifyPluralVector(vec);
+    printPluralVector(vec, "唯一化后");
+    
+    // 测试排序
+    PluralComparator comp;
+    std::function<bool(const plural&, const plural&)> compFunc = comp;
+    
+    shufflePluralVector(vec);
+    printPluralVector(vec, "打乱后");
+    
+    bubbleSort(vec, compFunc);
+    printPluralVector(vec, "冒泡排序后");
+    
+    shufflePluralVector(vec);
+    mergeSort(vec, compFunc);
+    printPluralVector(vec, "归并排序后");
+    
+    // 测试区间查找
+    MySTL::Vector<plural> rangeResult = findInModulusRange(vec, 2.0, 8.0);
+    printPluralVector(rangeResult, "模在[2.0, 8.0)范围内的复数");
+    
+    return 0;
 }

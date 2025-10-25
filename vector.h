@@ -36,6 +36,8 @@
 #include <cstdlib>
 #include <ctime>
 
+namespace MySTL {
+
 typedef int Rank; // 秩类型定义，用于表示元素在向量中的位置
 #define DEFAULT_CAPACITY 10 // 默认初始容量
 
@@ -96,11 +98,15 @@ public:
     int deduplicate(); // 无序去重
     int uniquify(); // 有序去重
 
-    // 遍历
-    void traverse(void (*)(T&)); // 遍历（使用函数指针）
-    template <typename VST> void traverse(VST&); // 遍历（使用函数对象）
+    // 遍历（使用函数指针）
+    void traverse(void (*)(T&));
+    // 遍历（使用函数对象）
+    template <typename VST> void traverse(VST&);
 };
 
-#include "vector.cpp" // 包含实现文件
+} // namespace MySTL
+
+// 模板类的实现需要在头文件中定义
+#include "vector.cpp"
 
 #endif // VECTOR_H
