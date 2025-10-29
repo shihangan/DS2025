@@ -216,3 +216,40 @@ MySTL::Vector<plural> findInModulusRange(const MySTL::Vector<plural>& vec, doubl
     
     return result;
 }
+
+int main() {
+    std::cout << "复数向量测试" << std::endl;
+
+    // 生成随机复数向量
+    auto vec = generateRandomPluralVector(10, -10.0, 10.0);
+    printPluralVector(vec, "初始向量");
+
+    // 查找指定复数
+    plural target(3.0, 4.0);
+    std::cout << "查找复数 3 + 4i: " << (findPlural(vec, target) ? "找到" : "未找到") << std::endl;
+
+    // 插入重复元素并去重
+    vec.insert(target);
+    vec.insert(target);
+    printPluralVector(vec, "插入重复元素后");
+    uniquifyPluralVector(vec);
+    printPluralVector(vec, "去重后");
+
+    // 置乱
+    shufflePluralVector(vec);
+    printPluralVector(vec, "置乱后");
+
+    // 起泡排序（按模比较）
+    bubbleSort(vec, std::function<bool(const plural&, const plural&)>(PluralComparator()));
+    printPluralVector(vec, "起泡排序后");
+
+    // 归并排序（按模比较）
+    mergeSort(vec, std::function<bool(const plural&, const plural&)>(PluralComparator()));
+    printPluralVector(vec, "归并排序后");
+
+    // 查找模在区间 [5, 8) 的复数
+    auto ranged = findInModulusRange(vec, 5.0, 8.0);
+    printPluralVector(ranged, "模在[5,8)的元素");
+
+    return 0;
+}

@@ -105,9 +105,6 @@ public:
 
 } // namespace MySTL
 
-#ifndef VECTOR_IMPLEMENTATION_INCLUDED
-#define VECTOR_IMPLEMENTATION_INCLUDED
 #include "vector.cpp" // 包含实现文件
-#endif
 
 #endif // VECTOR_H
