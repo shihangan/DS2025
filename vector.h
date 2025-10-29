@@ -98,15 +98,16 @@ public:
     int deduplicate(); // 无序去重
     int uniquify(); // 有序去重
 
-    // 遍历（使用函数指针）
-    void traverse(void (*)(T&));
-    // 遍历（使用函数对象）
-    template <typename VST> void traverse(VST&);
+    // 遍历
+    void traverse(void (*)(T&)); // 遍历（使用函数指针）
+    template <typename VST> void traverse(VST&); // 遍历（使用函数对象）
 };
 
 } // namespace MySTL
 
-// 模板类的实现需要在头文件中定义
-#include "vector.cpp"
+#ifndef VECTOR_IMPLEMENTATION_INCLUDED
+#define VECTOR_IMPLEMENTATION_INCLUDED
+#include "vector.cpp" // 包含实现文件
+#endif
 
 #endif // VECTOR_H

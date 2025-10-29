@@ -37,8 +37,8 @@ int largestRectangleArea(const Vector<int>& heights) {
 }
 
 // 生成随机测试数据
-Vector<Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
-    Vector<Vector<int>> testData;
+MySTL::Vector<MySTL::Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
+    MySTL::Vector<MySTL::Vector<int>> testData;
     std::random_device rd;
     std::mt19937 gen(rd());
     
@@ -47,7 +47,7 @@ Vector<Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
         std::uniform_int_distribution<> sizeDist(1, maxSize);
         int size = sizeDist(gen);
         
-        Vector<int> heights;
+        MySTL::Vector<int> heights;
         // 随机生成高度 (0 <= height <= maxHeight)
         std::uniform_int_distribution<> heightDist(0, maxHeight);
         
@@ -63,7 +63,7 @@ Vector<Vector<int>> generateTestData(int numTests, int maxSize, int maxHeight) {
 }
 
 // 打印柱状图（可视化）
-void printHistogram(const Vector<int>& heights) {
+void printHistogram(const MySTL::Vector<int>& heights) {
     int maxHeight = 0;
     if (heights.size() > 0) {
         for (int i = 0; i < heights.size(); ++i) {
@@ -98,7 +98,7 @@ int main() {
     int maxSize = 20;  // 为了可视化效果，限制大小
     int maxHeight = 10; // 为了可视化效果，限制高度
     
-    Vector<Vector<int>> testData = generateTestData(numTests, maxSize, maxHeight);
+    MySTL::Vector<MySTL::Vector<int>> testData = generateTestData(numTests, maxSize, maxHeight);
     
     std::cout << "柱状图中矩形的最大面积测试：" << std::endl;
     std::cout << "==============================" << std::endl;
@@ -123,24 +123,24 @@ int main() {
     }
     
     // 额外测试一些特殊情况
-    Vector<Vector<int>> specialCases;
+    MySTL::Vector<MySTL::Vector<int>> specialCases;
     {
-        Vector<int> v1; int a1[] = {2,1,5,6,2,3};
+        MySTL::Vector<int> v1; int a1[] = {2,1,5,6,2,3};
         for (int k=0;k<6;++k) v1.insert(v1.size(), a1[k]);
         specialCases.insert(specialCases.size(), v1);
     }
     {
-        Vector<int> v2; int a2[] = {2,4};
+        MySTL::Vector<int> v2; int a2[] = {2,4};
         for (int k=0;k<2;++k) v2.insert(v2.size(), a2[k]);
         specialCases.insert(specialCases.size(), v2);
     }
     {
-        Vector<int> v3; int a3[] = {0,0,0,0};
+        MySTL::Vector<int> v3; int a3[] = {0,0,0,0};
         for (int k=0;k<4;++k) v3.insert(v3.size(), a3[k]);
         specialCases.insert(specialCases.size(), v3);
     }
     {
-        Vector<int> v4; // 空数组
+        MySTL::Vector<int> v4; // 空数组
         specialCases.insert(specialCases.size(), v4);
     }
     

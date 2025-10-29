@@ -52,11 +52,6 @@ public:
         return real == other.real && imag == other.imag;
     }
     
-    // 重载不等运算符
-    bool operator!=(const plural& other) const {
-        return !(*this == other);
-    }
-    
     // 输出运算符重载
     friend std::ostream& operator<<(std::ostream& os, const plural& p) {
         os << p.real;
@@ -220,49 +215,4 @@ MySTL::Vector<plural> findInModulusRange(const MySTL::Vector<plural>& vec, doubl
     }
     
     return result;
-}
-
-// 主函数，测试复数向量的各种操作
-int main() {
-    std::cout << "复数向量操作测试：" << std::endl;
-    std::cout << "==============================" << std::endl;
-    
-    // 生成随机复数向量
-    MySTL::Vector<plural> vec = generateRandomPluralVector(10);
-    printPluralVector(vec, "原始向量");
-    
-    // 测试查找功能
-    plural target(3.0, 4.0);
-    std::cout << "\n查找复数 " << target << ": ";
-    if (findPlural(vec, target)) {
-        std::cout << "找到" << std::endl;
-    } else {
-        std::cout << "未找到" << std::endl;
-    }
-    
-    // 测试唯一化
-    vec.insert(vec[0]); // 插入重复元素
-    printPluralVector(vec, "插入重复元素后");
-    uniquifyPluralVector(vec);
-    printPluralVector(vec, "唯一化后");
-    
-    // 测试排序
-    PluralComparator comp;
-    std::function<bool(const plural&, const plural&)> compFunc = comp;
-    
-    shufflePluralVector(vec);
-    printPluralVector(vec, "打乱后");
-    
-    bubbleSort(vec, compFunc);
-    printPluralVector(vec, "冒泡排序后");
-    
-    shufflePluralVector(vec);
-    mergeSort(vec, compFunc);
-    printPluralVector(vec, "归并排序后");
-    
-    // 测试区间查找
-    MySTL::Vector<plural> rangeResult = findInModulusRange(vec, 2.0, 8.0);
-    printPluralVector(rangeResult, "模在[2.0, 8.0)范围内的复数");
-    
-    return 0;
 }
