@@ -1,10 +1,15 @@
 # DS2025 数据结构库
+cmake_minimum_required(VERSION 3.16)
+project(DS2025 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if (MSVC)
+  add_compile_options(/utf-8)
+endif()
 
 # 设置源文件
 set(MYSTL_SOURCES
-    stack.cpp
-    listnode.cpp
-    vector.cpp
+    mystl.cpp
 )
 
 # 设置头文件（如果有的话）
@@ -65,3 +70,12 @@ endif()
 # 打印库信息
 message(STATUS "MySTL Library sources: ${MYSTL_SOURCES}")
 message(STATUS "Building MySTL static library and test executable")
+# 实验2：Huffman 编码演示程序
+add_executable(exp2_huffman Huffman.cpp)
+target_link_libraries(exp2_huffman PRIVATE mystl)
+
+add_executable(exp2_app exp2/exp2.cpp)
+target_link_libraries(exp2_app PRIVATE mystl)
+
+add_executable(exp3_app exp3/exp3.cpp)
+target_link_libraries(exp3_app PRIVATE mystl)

@@ -1,0 +1,158 @@
+\documentclass[12pt]{article}
+\usepackage[UTF8]{ctex}
+\usepackage{geometry}
+\geometry{a4paper,margin=1in}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{enumitem}
+\setstretch{1.2}
+
+\title{exp2/exp2.cpp Huffman编码实现详解与学习指引}
+\author{DS2025 项目}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{文档目标}
+本指南面向 C++ 初学者，围绕 \texttt{exp2/exp2.cpp} 的 Huffman 编码实现，系统讲解各个模块的作用、数据结构设计、算法流程与复杂度，帮助理解在不依赖官方 STL 容器的前提下如何完成一个可工作的编码器。源码路径与重要行号在文中注明，便于快速定位。\newline
+
+源码文件：\texttt{e:/source/DS2025/DS2025/exp2/exp2.cpp}
+
+\section{整体结构与依赖}
+\begin{itemize}[leftmargin=1.4em]
+  \item 输入/输出：保留官方 \texttt{<iostream>}、\texttt{<fstream>} 与 \texttt{std::string}（允许使用），用于打印与读取文本（1--3行、43行）。
+  \item 自写容器：使用 \texttt{MySTL::Vector} 管理数组数据（4行、45行等）；使用 \texttt{BinaryTree} 表示 Huffman 树（8行、58行等）。
+  \item C 库：\texttt{<cctype>} 做字符大小写处理；\texttt{<climits>} 提供 \texttt{INT\_MAX}（5--6行）。
+\end{itemize}
+
+\section{位图 \texttt{Bitmap}（15--37行）}
+\subsection*{作用}
+\texttt{Bitmap} 用来记录一段比特序列（0/1），对应 Huffman 编码中的路径。相比使用布尔数组，位图更节省空间并提供直接的按位设置/清除。
+
+\subsection*{成员与方法}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{数据成员}：\texttt{M}（位数组指针）、\texttt{N}（字节数）、\texttt{\_sz}（已使用位数）。
+  \item \textbf{构造/拷贝}：\texttt{Bitmap(Rank n)} 初始化，\texttt{Bitmap(const Bitmap\&)} 深拷贝，\texttt{operator=} 赋值（28--31行）。
+  \item \textbf{\texttt{init}/\texttt{expand}}：负责初始分配与扩容（19--26行）。\texttt{expand(k)} 在需要记录第 \(k\) 位时确保容量足够。
+  \item \textbf{设置/清除/测试}：\texttt{set(k)} 写入1，\texttt{clear(k)} 写入0，\texttt{test(k)} 查询位值（33--36行）。注意 \texttt{\_sz} 表示已设置的总长度。
+  \item \textbf{转字符串}：\texttt{bits2string(n)} 将前 \(n\) 位转成由 `0/1` 组成的 C 字符串（36行）。
+\end{itemize}
+
+\subsection*{使用注意}
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{bits2string} 返回的是动态分配的 \texttt{char*}，调用方需负责 \texttt{delete[]}（39行的 \texttt{HuffCode::str()} 已正确释放）。
+  \item \texttt{set}/\texttt{clear} 会更新 \texttt{\_sz}，用于描述当前编码长度。\texttt{test} 不改变 \texttt{\_sz}。
+\end{itemize}
+
+\section{编码结构 \texttt{HuffCode}（39行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{成员}：\texttt{bits}（位图）、\texttt{len}（长度）。
+  \item \textbf{\texttt{push(bool)}}：往末尾压入一位；\texttt{true} 记为1，\texttt{false} 记为0，长度自增（39行）。
+  \item \textbf{\texttt{str()}}：将当前编码转换为字符串，便于打印（39行）。
+\end{itemize}
+
+\section{符号项 \texttt{HuffItem}（41行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item 将字母与其频率绑定在一起，便于作为树节点数据：\texttt{char ch; int freq;}。
+\end{itemize}
+
+\section{文本读取 \texttt{read\_text\_or\_sample}（43行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item 优先尝试读取 \texttt{exp2/I\_have\_a\_dream.txt}；若文件不存在，返回内置英文样例。
+  \item 使用官方 \texttt{std::ifstream} 与 \texttt{std::string}，确保初学者无需额外自写字符串类即可理解逻辑。
+\end{itemize}
+
+\section{统计频率 \texttt{letter\_freq}（45行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item 输入：\texttt{std::string}。
+  \item 输出：\texttt{MySTL::Vector<int>}，长度固定为26，对应 a--z。
+  \item 流程：遍历字符，转小写；若在 a--z 范围内则相应槽位频率 +1。
+\end{itemize}
+
+\section{选最小索引 \texttt{find\_min\_index}（47--56行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item 输入：\texttt{Vector<BinaryTree<HuffItem>*>}，每个元素是一棵以频率为权的树。
+  \item 输出：当前集合中根频率最小的树下标；若集合为空返回 -1。
+  \item 细节：使用 \texttt{INT\_MAX} 初始化最优值（需要 \texttt{<climits>}），跳过空指针或空根。
+\end{itemize}
+
+\section{构建 Huffman 树 \texttt{build\_huff}（58--81行）}
+\subsection*{思路}
+将所有频率非零的字母各自作为一棵单节点树入集合；每次从集合中取出两棵根频率最小的树合并为一棵新树，左/右子树分别是这两个最小树，根的频率为两者之和。重复直到集合只剩一棵，即 Huffman 树。
+
+\subsection*{实现要点}
+\begin{itemize}[leftmargin=1.4em]
+  \item 集合类型：\texttt{Vector<BinaryTree<HuffItem>*>}（59行）。
+  \item 插入单字符树：\texttt{insertAsRoot} 将 \texttt{HuffItem\{ch, freq\}} 作为根（62--64行）。
+  \item 合并过程：连续两次调用 \texttt{find\_min\_index} 取出最小两树（69--72行），新建根并 \texttt{attachLeft}/\texttt{attachRight}（74--76行）。
+  \item 资源管理：合并后删除旧树指针（77行），将新树插回集合（78行）。
+  \item 边界：若初始集合为空，返回一棵空树（67行）。
+\end{itemize}
+
+\section{生成编码 \texttt{gen\_codes}（83行）}
+\subsection*{思路}
+对 Huffman 树进行递归遍历：
+\begin{itemize}[leftmargin=1.4em]
+  \item 走向左孩子即压入 \texttt{0}，走向右孩子即压入 \texttt{1}；到叶子节点时记录当前路径为该字母的编码。
+  \item 回溯时通过 \texttt{len--} 撤销一步，保持路径正确。
+\end{itemize}
+
+\subsection*{实现要点}
+\begin{itemize}[leftmargin=1.4em]
+  \item 编码表使用 \texttt{Vector<HuffCode>}，固定 26 槽，索引 \texttt{ch - 'a'}。
+  \item 叶子判定：左右孩子均为空；仅在 a--z 范围内记录编码。
+\end{itemize}
+
+\section{单词编码 \texttt{encode\_word}（85行）}
+\begin{itemize}[leftmargin=1.4em]
+  \item 输入：\texttt{std::string} 单词与编码表 \texttt{Vector<HuffCode>}。
+  \item 输出：编码字符串（由 `0/1` 构成），对每个字母附加其对应编码。
+  \item 非字母与未出现过的字母将被忽略（\texttt{len == 0}）。
+\end{itemize}
+
+\section{主程序 \texttt{main()}（87--97行）}
+\begin{enumerate}[leftmargin=1.4em]
+  \item 读取文本：优先从文件读取，否则用内置样例（89行）。
+  \item 统计频率：\texttt{letter\_freq(text)}（90行）。
+  \item 构建树：\texttt{build\_huff(freq)} 返回 Huffman 树指针（91行）。
+  \item 生成编码：\texttt{Vector<HuffCode>} 初始化并递归填充（92--93行）。
+  \item 打印编码表：按 a--z 输出已有编码（93行）。
+  \item 演示单词编码：\texttt{dream, have, martin, king}（94--95行）。
+  \item 释放资源：\texttt{delete ht;}（96行）。
+\end{enumerate}
+
+\section{时间复杂度与优化}
+\begin{itemize}[leftmargin=1.4em]
+  \item 频率统计：\(O(n)\)，\(n\) 为文本长度。
+  \item 树构建：当前实现每次线性选最小两棵，若有 \(k\) 个不同字母，则为 \(O(k^2)\)。
+  \item 生成编码：对每个叶子路径遍历，总体 \(O(k)\)（树高 \(\le k\)）。
+  \item 若允许优先队列（最小堆），可将构建降到 \(O(k \log k)\)。本项目为统一使用自写容器，故采用线性选择法。
+\end{itemize}
+
+\section{健壮性与边界}
+\begin{itemize}[leftmargin=1.4em]
+  \item 空文本：频率向量全零，构建返回空树；编码表为空；编码输出为空字符串。
+  \item 非字母字符：过滤掉，避免污染频率统计与编码表。
+  \item 资源管理：合并时及时 \texttt{delete} 旧树；\texttt{bits2string} 返回的 \texttt{char*} 在 \texttt{str()} 中被释放，避免泄漏。
+\end{itemize}
+
+\section{自写容器要点}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{\texttt{Vector}}：构造形如 \texttt{Vector<T>(size, capacity, init\_val)}，\texttt{insert(pos, val)} 末尾插入，\texttt{remove(i)} 返回被移除的元素。\texttt{operator[]} 提供索引访问。
+  \item \textbf{\texttt{BinaryTree}}：\texttt{insertAsRoot} 插入根；\texttt{attachLeft}/\texttt{attachRight} 将一棵树接到指定节点的左/右子树；\texttt{root()} 访问根节点；节点结构为 \texttt{TreeNode<T>}，带 \texttt{left/right/data} 字段。
+\end{itemize}
+
+\section{编译与运行}
+\begin{itemize}[leftmargin=1.4em]
+  \item 使用 CMake（已配置）：\\
+  \texttt{cmake -S . -B build}\\
+  \texttt{cmake --build build --config Release -j 8}
+  \item 运行：\\
+  \texttt{.\\build\\Release\\exp2\_app.exe}
+\end{itemize}
+
+\section*{结语}
+本实现展示了在不依赖官方容器的情况下，如何使用自写 \texttt{Vector} 与 \texttt{BinaryTree} 搭建一个完整的 Huffman 编码器。建议初学者跟随本文档的模块顺序，打开源码并对照行号逐步调试与理解，进一步体会数据结构与算法在工程中的结合。
+
+\end{document}

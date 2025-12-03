@@ -32,7 +32,6 @@
 #define VECTOR_H
 
 #include <iostream>
-#include <algorithm>
 #include <cstdlib>
 #include <ctime>
 

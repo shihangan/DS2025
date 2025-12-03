@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 #include <ctime>
-#include <algorithm>
 
 namespace MySTL {
 
@@ -174,9 +173,30 @@ int Vector<T>::remove(Rank lo, Rank hi) {
 
 // --- Sorting & Shuffling ---
 template<typename T>
+static inline void __swap_val(T& a, T& b) { T t = a; a = b; b = t; }
+
+template<typename T>
+static Rank __partition(T* A, Rank lo, Rank hi) {
+    T pivot = A[hi - 1]; Rank i = lo;
+    for (Rank j = lo; j < hi - 1; ++j) {
+        if (!(pivot < A[j])) { __swap_val(A[i], A[j]); ++i; }
+    }
+    __swap_val(A[i], A[hi - 1]);
+    return i;
+}
+
+template<typename T>
+static void __quickSort(T* A, Rank lo, Rank hi) {
+    if (hi - lo <= 1) return;
+    Rank p = __partition(A, lo, hi);
+    __quickSort(A, lo, p);
+    __quickSort(A, p + 1, hi);
+}
+
+template<typename T>
 void Vector<T>::sort(Rank lo, Rank hi) {
     if (lo < 0) lo = 0; if (hi > _size) hi = _size; if (lo >= hi) return;
-    std::sort(_elem + lo, _elem + hi);
+    __quickSort(_elem, lo, hi);
 }
 
 template<typename T>
@@ -188,7 +208,7 @@ void Vector<T>::unsort(Rank lo, Rank hi) {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
     for (Rank i = hi - 1; i > lo; --i) {
         Rank j = lo + std::rand() % (i - lo + 1);
-        std::swap(_elem[i], _elem[j]);
+        __swap_val(_elem[i], _elem[j]);
     }
 }
 

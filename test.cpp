@@ -10,6 +10,8 @@
 #include <iostream>
 #include <string>
 #include "stack.h"
+#include "tree.h"
+#include "graph.h"
 
 using namespace std;
 using namespace MySTL;
@@ -19,6 +21,8 @@ void testStack();
 void testStackBasicOperations();
 void testStackCopyAndAssignment();
 void testStackTraversal();
+void testTree();
+void testGraph();
 
 // 辅助函数：打印分隔线
 void printSeparator(const string& title) {
@@ -39,6 +43,8 @@ int main() {
     cout << "========================" << endl;
     
     testStack();
+    testTree();
+    testGraph();
     
     cout << "\n所有测试完成！" << endl;
     return 0;
@@ -93,6 +99,53 @@ void testStackBasicOperations() {
     }
     
     cout << "栈是否为空: " << (intStack.empty() ? "是" : "否") << endl;
+}
+
+void testTree() {
+    printSeparator("树（BinaryTree）测试");
+    BinaryTree<int> bt;
+    auto r = bt.insertAsRoot(1);
+    auto l = bt.insertAsLeft(r, 2);
+    auto rr = bt.insertAsRight(r, 3);
+    bt.insertAsLeft(l, 4);
+    bt.insertAsRight(l, 5);
+    cout << "规模: " << bt.size() << endl;
+    cout << "先序: ";
+    auto printi = [](const int& x) { cout << x << " "; };
+    bt.preorder(printi);
+    cout << endl;
+    cout << "中序: ";
+    bt.inorder(printi);
+    cout << endl;
+    cout << "后序: ";
+    bt.postorder(printi);
+    cout << endl;
+    cout << "层序: ";
+    bt.levelorder(printi);
+    cout << endl;
+    bt.remove(l);
+    cout << "删除左子树后规模: " << bt.size() << endl;
+}
+
+void testGraph() {
+    printSeparator("图（Graph）测试");
+    Graph<int> g(5);
+    g.addEdge(0, 1);
+    g.addEdge(0, 2);
+    g.addEdge(1, 3);
+    g.addEdge(2, 3);
+    g.addEdge(3, 4);
+    cout << "BFS: ";
+    auto visitv = [](int v) { cout << v << " "; };
+    g.bfs(0, visitv);
+    cout << endl;
+    cout << "DFS: ";
+    g.dfs(0, visitv);
+    cout << endl;
+    auto dist = g.dijkstra(0);
+    cout << "Dijkstra从0的距离: ";
+    for (size_t i = 0; i < dist.size(); ++i) cout << dist[i] << " ";
+    cout << endl;
 }
 
 /**
