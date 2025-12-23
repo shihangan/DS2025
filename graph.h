@@ -23,6 +23,14 @@ public:
     template <typename VST> void bfs(int s, VST& visit) const;
     template <typename VST> void dfs(int s, VST& visit) const;
     Vector<W> dijkstra(int s) const;
+    Vector<int> dijkstra_path(int s, int t) const;
+    template <typename H>
+    Vector<int> astar(int s, int t, H h) const;
+    Vector<int> topo_sort() const;
+    Vector<int> prim_mst(int s = 0) const;
+    Vector<Vector<int>> biconnected() const;
+    template <typename Score>
+    Vector<int> best_first(int s, Score score) const;
 };
 
 } // namespace MySTL

@@ -79,3 +79,6 @@ target_link_libraries(exp2_app PRIVATE mystl)
 
 add_executable(exp3_app exp3/exp3.cpp)
 target_link_libraries(exp3_app PRIVATE mystl)
+
+add_executable(exp4_app exp4/exp4.cpp)
+target_link_libraries(exp4_app PRIVATE mystl)
